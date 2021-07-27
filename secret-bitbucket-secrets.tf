@@ -13,7 +13,7 @@ resource "aws_secretsmanager_secret" "bitbucket_pat_and_signing_key" {
 }
 
 locals {
-  bitbucket_tokens = jsonencode({
+  bitbucket_secrets = jsonencode({
     "bitbucket_secret" : var.lambda_bitbucket_secret,
     "bitbucket_token" : var.lambda_bitbucket_access_token
   })
@@ -21,7 +21,7 @@ locals {
 
 resource "aws_secretsmanager_secret_version" "bitbucket_pat_and_signing_key" {
   secret_id = aws_secretsmanager_secret.bitbucket_pat_and_signing_key.id
-  secret_string = local.bitbucket_tokens
+  secret_string = local.bitbucket_secrets
 }
 
 data "aws_secretsmanager_secret_version" "bitbucket_pat_and_signing_key" {
