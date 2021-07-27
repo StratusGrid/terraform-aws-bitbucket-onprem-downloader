@@ -20,9 +20,10 @@ resource "aws_lambda_function" "bitbucket_integration" {
   source_code_hash = filebase64sha256(data.archive_file.function_code.output_path)
   environment {
     variables = {
-      "BITBUCKET_SECRET"     = var.lambda_bitbucket_secret
+//      "BITBUCKET_SECRET"     = var.lambda_bitbucket_secret
+      "BITBUCKET_SECRET_NAME" = aws_secretsmanager_secret.bitbucket_pat_and_signing_key.id
       "BITBUCKET_SERVER_URL" = var.lambda_bitbucket_server_url
-      "BITBUCKET_TOKEN"      = var.lambda_bitbucket_access_token
+//      "BITBUCKET_TOKEN"      = var.lambda_bitbucket_access_token
       "S3BUCKET"             = var.s3_bucket_name
       "WEBPROXY_HOST"        = ""
       "WEBPROXY_PORT"        = ""
@@ -100,9 +101,38 @@ EOF
   })
 }
 
+resource "aws_iam_policy" "secret_access" {
+  description = "Access to Bitbucket Secret"
+  name        = "${var.name}-bitbucket-integration-sm-access"
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": [
+        "${aws_secretsmanager_secret.bitbucket_pat_and_signing_key.arn}"
+      ],
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+  tags = merge(var.input_tags, {
+    "Name" = "${var.name}-bitbucket-integration-sm-access"
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "s3_bucket_access" {
   policy_arn = aws_iam_policy.s3_bucket_access.arn
   role       = aws_iam_role.bitbucket_integration_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "secret_access" {
+  policy_arn = aws_iam_policy.secret_access.arn
+  role = aws_iam_role.bitbucket_integration_role.name
 }
 
 resource "aws_iam_role_policy_attachment" "AWSLambdaVPCAccessExecutionRole" {
