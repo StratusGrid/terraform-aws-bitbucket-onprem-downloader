@@ -3,7 +3,32 @@ const axios = require('axios');
 const s3 = new AWS.S3();
 const crypto = require('crypto');
 
+const smClient = new AWS.SecretsManager({
+    region: "us-east-1"
+});
+
+const getSecrets = async (SecretId) => {
+    return await new Promise((resolve, reject) => {
+        smClient.getSecretValue({ SecretId }, (err, result) => {
+            if (err) reject(err)
+            else resolve(JSON.parse(result.SecretString))
+        })
+    })
+}
+
+// const main = async (event) => {
+//     console.log('Event:', event)
+//     console.log(process.env.BITBUCKET_SECRET_NAME)
+//     const bbSecret = await getSecrets('cin-tf-cp-git-downloader-bitbucket-secret' )
+//     return bbSecret["bitbucket_secret"]
+// }
+//
+// exports.handler = main
+
 exports.handler = async (event) => {
+
+    // Set the value of the Bitbucket Secret; required before parsing individual values
+    const bbSecret = await getSecrets('cin-tf-cp-git-downloader-bitbucket-secret' )
 
     try {
         console.log(`Incoming event: ${JSON.stringify(event)}`);
@@ -18,7 +43,7 @@ exports.handler = async (event) => {
         }
 
         // Validate message signature
-        if (!(checkSignature(process.env.BITBUCKET_SECRET, normalizedHeaders['x-hub-signature'], event.body))) {
+        if (!(checkSignature(bbSecret["bitbucket_secret"], normalizedHeaders['x-hub-signature'], event.body))) {
             console.log('Invalid webhook message signature');
             return responseToApiGw(401, 'Signature is not valid');
         }
@@ -34,7 +59,7 @@ exports.handler = async (event) => {
             projectName: eventBody.repository.project.key,
             repoName: eventBody.repository.name,
             branch: eventBody.changes[0].ref.displayId,
-            token: process.env.BITBUCKET_TOKEN
+            token: bbSecret["bitbucket_token"]
         };
 
         let proxy;
