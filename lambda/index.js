@@ -8,11 +8,13 @@ const smClient = new AWS.SecretsManager({
 });
 
 const getSecrets = async (SecretId) => {
-    return await new Promise((resolve, reject) => {
+    console.log('<<< getSecrets()')
+    return new Promise((resolve, reject) => {
         smClient.getSecretValue({ SecretId }, (err, result) => {
             if (err) reject(err)
             else resolve(JSON.parse(result.SecretString))
         })
+    console.log('>>> getSecrets()')
     })
 }
 
@@ -119,6 +121,7 @@ function normalizeObject(inputObject) {
 async function downloadFile(repoConfig, proxy) {
     console.log('info', '>>> downloadFile()');
     console.log(`proxy: ${JSON.stringify(proxy)}`);
+    console.log(`branch: ${repoConfig.branch}`)
 
     const params = {
         proxy,
