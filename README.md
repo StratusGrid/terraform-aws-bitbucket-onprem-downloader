@@ -2,6 +2,7 @@
 
 This module creates an API Gateway, Lambda, and supporting resources.
 The API GW accepts an incoming webhook from a 3rd-party (on premise) Bitbucket server and triggers the Lambda which requests a ZIP archive of the repository which triggered the webhook, and uploads that ZIP to a provided S3 bucket.
+Note that the resulting archive will be named after the branch being retrieved, and any forward slashes will be replaced with hyphens.
 
 ### Pre-deployment Checklist:
 Navigate into the "lambda" directory and build the requisite modules:
@@ -13,8 +14,8 @@ npm install
 ### Example:
 ```
 module "onprem_bitbucket_git_downloader" {
-  source                        = "./modules/onprem-git-downloader"
-  name                          = "${var.name_prefix}-git-downloader"
+  source                        = "../.."
+  name                          = "${var.name_prefix}-bitbucket-git-downloader"
   apigw_logging_level           = "ERROR"
   apigw_metrics_enabled         = true
   apigw_stage_name              = "prod"
