@@ -4,7 +4,7 @@ const s3 = new AWS.S3();
 const crypto = require('crypto');
 
 const smClient = new AWS.SecretsManager({
-    region: "us-east-1"
+    region: process.env.AWS_REGION
 });
 
 const getSecrets = async (SecretId) => {
