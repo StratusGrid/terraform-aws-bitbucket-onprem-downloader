@@ -21,7 +21,20 @@ const getSecrets = async (SecretId) => {
 exports.handler = async (event) => {
 
     // Set the value of the Bitbucket Secret; required before parsing individual values
-    const bbSecret = await getSecrets('cin-tf-cp-git-downloader-bitbucket-secret' )
+    let bbSecret
+
+    try {
+        bbSecret = await getSecrets(process.env.BITBUCKET_SECRET_NAME)
+
+        if(bbSecret["bitbucket_secret"].length < 1) {
+            throw new Error('Bitbucket webhook signing secret is empty.');
+        }
+    }
+    catch (err) {
+        console.log(err)
+        console.log("Failed to acquire Bitbucket Secret.")
+        return responseToApiGw(500, 'Error acquiring Bitbucket Secret.');
+    }
 
     try {
         console.log(`Incoming event: ${JSON.stringify(event)}`);
