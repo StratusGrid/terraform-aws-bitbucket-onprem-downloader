@@ -64,7 +64,7 @@ exports.handler = async (event) => {
             serverUrl: process.env.BITBUCKET_SERVER_URL,
             projectName: eventBody.repository.project.key,
             repoName: eventBody.repository.name,
-            branch: eventBody.changes[0].ref.displayId,
+            branch: encodeURIComponent(eventBody.changes[0].ref.displayId),
             token: bbSecret["bitbucket_token"]
         };
 
@@ -83,7 +83,8 @@ exports.handler = async (event) => {
         const s3Upload = await s3.upload({
             Bucket: process.env.S3BUCKET,
             ServerSideEncryption: 'AES256',
-            Key: `${repoConfig.projectName}/${repoConfig.repoName}/${repoConfig.branch}.zip`,
+            // Forward slashes are not allowed in S3 Object names; replace with hyphen
+            Key: `${repoConfig.projectName}/${repoConfig.repoName}/` + repoConfig.branch.replace("%2F", "-") + '.zip',
             Body: file
         }).promise();
         console.log(s3Upload);
