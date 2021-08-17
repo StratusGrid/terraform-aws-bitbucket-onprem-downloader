@@ -159,16 +159,13 @@ async function downloadFile(repoConfig, proxy) {
  */
 function checkSignature(signingSecret, signature, body) {
     console.log('info', '>>> signingSecret()');
+
     const hash = crypto.createHmac('sha256', signingSecret).update(body).digest('hex');
 
     const signatureHash = signature.split('=');
-    if (signatureHash[1] === hash) {
-        console.log('info', '<<< signingSecret()');
-        return true;
-    }
 
     console.log('info', '<<< signingSecret()');
-    return false;
+    return signatureHash[1] === hash;
 }
 
 /**
