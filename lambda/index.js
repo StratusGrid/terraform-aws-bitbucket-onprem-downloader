@@ -11,21 +11,12 @@ const getSecrets = async (SecretId) => {
     console.log('<<< getSecrets()')
     return new Promise((resolve, reject) => {
         smClient.getSecretValue({ SecretId }, (err, result) => {
-            if (err) reject(err)
-            else resolve(JSON.parse(result.SecretString))
+            if (err) reject(err);
+            else resolve(JSON.parse(result.SecretString));
         })
     console.log('>>> getSecrets()')
     })
 }
-
-// const main = async (event) => {
-//     console.log('Event:', event)
-//     console.log(process.env.BITBUCKET_SECRET_NAME)
-//     const bbSecret = await getSecrets('cin-tf-cp-git-downloader-bitbucket-secret' )
-//     return bbSecret["bitbucket_secret"]
-// }
-//
-// exports.handler = main
 
 exports.handler = async (event) => {
 
