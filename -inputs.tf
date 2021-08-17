@@ -33,13 +33,11 @@ variable "input_tags" {
 variable "lambda_bitbucket_access_token" {
   description = "Personal Access Token used to authenticate to the Bitbucket server."
   type = string
-  sensitive = true
 }
 
 variable "lambda_bitbucket_secret" {
   description = "The Bitbucket secret used to sign webhooks."
   type = string
-  sensitive = true
 }
 
 variable "lambda_bitbucket_server_url" {
