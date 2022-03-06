@@ -8,6 +8,6 @@
     },
     "dependencies": {
         "aws-sdk": "^2.1060.0",
-        "axios": "^0.25.0"
+        "axios": "^0.26.0"
     }
 }
