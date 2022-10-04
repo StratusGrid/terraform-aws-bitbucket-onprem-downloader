@@ -34,6 +34,7 @@ resource "aws_api_gateway_resource" "this" {
   rest_api_id = aws_api_gateway_rest_api.this.id
 }
 
+#tfsec:ignore:aws-api-gateway-no-public-access -- Ignores on Authorization is not enabled
 resource "aws_api_gateway_method" "this" {
   authorization = "NONE"
   http_method   = "POST"
@@ -66,6 +67,7 @@ resource "aws_api_gateway_integration" "this" {
   uri                     = aws_lambda_function.bitbucket_integration.invoke_arn
 }
 
+#tfsec:ignore:aws-api-gateway-enable-access-logging -- Ignores warning on Access logging is not configured tfsec:ignore:aws-api-gateway-enable-tracing
 resource "aws_api_gateway_stage" "this" {
   depends_on            = [aws_cloudwatch_log_group.api_gw]
   cache_cluster_enabled = false
@@ -78,6 +80,7 @@ resource "aws_api_gateway_stage" "this" {
   })
 }
 
+#tfsec:ignore:aws-cloudwatch-log-group-customer-key -- Ignores warning on Log group is not encrypted.
 resource "aws_cloudwatch_log_group" "api_gw" {
   name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.this.id}/${var.apigw_stage_name}"
   retention_in_days = 7

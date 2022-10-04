@@ -1,8 +1,12 @@
-# bitbucket-onprem-git-downloader
+<!-- BEGIN_TF_DOCS -->
+# terraform-aws-bitbucket-onprem-downloader
+
+GitHub: [StratusGrid/terraform-aws-bitbucket-onprem-downloader](https://github.com/StratusGrid/terraform-aws-bitbucket-onprem-downloader)
 
 This module creates an API Gateway, Lambda, and supporting resources.
 The API GW accepts an incoming webhook from a 3rd-party (on premise) Bitbucket server and triggers the Lambda which requests a ZIP archive of the repository which triggered the webhook, and uploads that ZIP to a provided S3 bucket.
-Note that the resulting archive will be named after the branch being retrieved, and any forward slashes will be replaced with hyphens.
+
+<span style="color:red">NOTE:</span> The resulting archive will be named after the branch being retrieved, and any forward slashes will be replaced with hyphens.
 
 ### Pre-deployment Checklist:
 Navigate into the "lambda" directory and build the requisite modules:
@@ -11,8 +15,8 @@ cd lambda
 npm install
 ```
 
-### Example:
-```
+## Example usage of the module:
+```hcl
 module "onprem_bitbucket_git_downloader" {
   source                        = "../.."
   name                          = "${var.name_prefix}-bitbucket-git-downloader"
@@ -28,154 +32,60 @@ module "onprem_bitbucket_git_downloader" {
   s3_bucket_arn                 = aws_s3_bucket.s3_bucket.arn
   s3_bucket_name                = aws_s3_bucket.s3_bucket.bucket
 }
-
-data "aws_iam_policy_document" "s3_bucket_access" {
-  statement {
-    actions = [
-      "s3:ListAllMyBuckets",
-      "s3:GetBucketLocation",
-    ]
-
-    resources = [
-      "arn:aws:s3:::*",
-    ]
-  }
-
-  statement {
-    actions = [
-      "s3:ListBucket",
-    ]
-
-    resources = [
-      aws_s3_bucket.s3_bucket.arn,
-    ]
-  }
-
-  statement {
-    actions = [
-      "s3:List*",
-      "s3:Get*",
-      "s3:Put*",
-    ]
-
-    resources = [
-      "${aws_s3_bucket.s3_bucket.arn}/*",
-    ]
-  }
-}
-
-# This bucket is used to store config files, binaries, artifacts etc. 
-# for the service build and deployment operations.
-
-resource "aws_s3_bucket" "s3_bucket" {
-  bucket = "${var.name_prefix}-resources${local.name_suffix}"
-
-  versioning {
-    enabled = true
-  }
-
-  lifecycle {
-    #    prevent_destroy = true
-    prevent_destroy = false
-  }
-
-  lifecycle_rule {
-    id      = "artifacts"
-    enabled = true
-
-    abort_incomplete_multipart_upload_days = 0
-
-    transition {
-      days          = 30
-      storage_class = "STANDARD_IA"
-    }
-
-    expiration {
-      days                         = 90
-      expired_object_delete_marker = false
-    }
-  }
-
-  logging {
-    target_bucket = data.aws_s3_bucket.logging.id
-    target_prefix = "s3/logs/${var.name_prefix}-resources${local.name_suffix}/"
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-      bucket_key_enabled = false
-    }
-  }
-
-  tags = merge(local.common_tags, {})
-}
-
-data "aws_iam_policy_document" "s3_bucket_policy" {
-  statement {
-    actions = [
-      "s3:*",
-    ]
-    condition {
-      test = "Bool"
-      values = [
-        "false",
-      ]
-      variable = "aws:SecureTransport"
-    }
-    effect = "Deny"
-    principals {
-      identifiers = [
-        "*",
-      ]
-      type = "AWS"
-    }
-    resources = [
-      aws_s3_bucket.s3_bucket.arn,
-      "${aws_s3_bucket.s3_bucket.arn}/*",
-    ]
-    sid = "DenyUnsecuredTransport"
-  }
-}
-
-resource "aws_s3_bucket_policy" "s3_bucket_policy_mapping" {
-  bucket = aws_s3_bucket.s3_bucket.id
-  policy = data.aws_iam_policy_document.s3_bucket_policy.json
-}
-
-# These secrets provide critical authentication and encryption for the lambda
-# which accesses the on-premise Bitbucket server
-
-# Secret to hold Bitbucket personal access token (PAT)
-resource "aws_secretsmanager_secret" "bitbucket_token" {
-  name = "${var.name_prefix}-bitbucket-token${local.name_suffix}"
-  tags = merge(
-    local.common_tags,
-    {
-      "Name" = "${var.name_prefix}-bitbucket-token${local.name_suffix}"
-    },
-  )
-}
-
-data "aws_secretsmanager_secret_version" "bitbucket_token" {
-  secret_id = aws_secretsmanager_secret.bitbucket_token.id
-}
-
-# Secret to hold Bitbucket webhook signing secret
-resource "aws_secretsmanager_secret" "bitbucket_secret" {
-  name = "${var.name_prefix}-bitbucket-secret${local.name_suffix}"
-  tags = merge(
-    local.common_tags,
-    {
-      "Name" = "${var.name_prefix}-bitbucket-secret${local.name_suffix}"
-    },
-  )
-}
-
-data "aws_secretsmanager_secret_version" "bitbucket_secret" {
-  secret_id = aws_secretsmanager_secret.bitbucket_secret.id
-}
-
 ```
+---
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_api_gateway_deployment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_deployment) | resource |
+| [aws_api_gateway_integration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration) | resource |
+| [aws_api_gateway_method.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method) | resource |
+| [aws_api_gateway_method_settings.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_settings) | resource |
+| [aws_api_gateway_resource.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_resource) | resource |
+| [aws_api_gateway_rest_api.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_rest_api) | resource |
+| [aws_api_gateway_stage.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_stage) | resource |
+| [aws_cloudwatch_log_group.api_gw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_iam_policy.s3_bucket_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_policy.secret_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.bitbucket_integration_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.aws_lambda_vpc_access_execution_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.s3_bucket_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.secret_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_kms_alias.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_lambda_function.bitbucket_integration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_lambda_permission.bitbucket_integration_api_gw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_secretsmanager_secret.bitbucket_pat_and_signing_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
+| [aws_secretsmanager_secret_version.bitbucket_pat_and_signing_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
+| [aws_security_group.lambda_function_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_apigw_logging_level"></a> [apigw\_logging\_level](#input\_apigw\_logging\_level) | Can be OFF, INFO, or ERROR. | `string` | `"OFF"` | no |
+| <a name="input_apigw_metrics_enabled"></a> [apigw\_metrics\_enabled](#input\_apigw\_metrics\_enabled) | Enable metrics for the prod stage of the API GW. | `bool` | `false` | no |
+| <a name="input_apigw_stage_name"></a> [apigw\_stage\_name](#input\_apigw\_stage\_name) | Stage name for API GW | `string` | `"prod"` | no |
+| <a name="input_current_account"></a> [current\_account](#input\_current\_account) | The AWS account number of the caller. | `string` | n/a | yes |
+| <a name="input_input_tags"></a> [input\_tags](#input\_input\_tags) | Map of tags to apply to resources | `map(string)` | <pre>{<br>  "Developer": "StratusGrid",<br>  "Provisioner": "Terraform"<br>}</pre> | no |
+| <a name="input_lambda_bitbucket_access_token"></a> [lambda\_bitbucket\_access\_token](#input\_lambda\_bitbucket\_access\_token) | Personal Access Token used to authenticate to the Bitbucket server. | `string` | n/a | yes |
+| <a name="input_lambda_bitbucket_secret"></a> [lambda\_bitbucket\_secret](#input\_lambda\_bitbucket\_secret) | The Bitbucket secret used to sign webhooks. | `string` | n/a | yes |
+| <a name="input_lambda_bitbucket_server_url"></a> [lambda\_bitbucket\_server\_url](#input\_lambda\_bitbucket\_server\_url) | URL for the 3rd party Bitbucket server. | `string` | n/a | yes |
+| <a name="input_lambda_subnet_ids"></a> [lambda\_subnet\_ids](#input\_lambda\_subnet\_ids) | List of subnets where the lambda will operate. | `list(string)` | n/a | yes |
+| <a name="input_lambda_vpc_id"></a> [lambda\_vpc\_id](#input\_lambda\_vpc\_id) | VPC to use when creating the SG for the Lambda | `string` | n/a | yes |
+| <a name="input_lambda_webproxy_host"></a> [lambda\_webproxy\_host](#input\_lambda\_webproxy\_host) | Hostname of your proxy server used by the Lambda function to access the Bitbucket server, such as myproxy.mydomain.com. If you don’t need a web proxy, leave it blank. | `string` | `""` | no |
+| <a name="input_lambda_webproxy_port"></a> [lambda\_webproxy\_port](#input\_lambda\_webproxy\_port) | Port of your proxy server used by the Lambda function to access the Bitbucket server, such as 8080. If you don’t need a web proxy leave it blank. | `string` | `""` | no |
+| <a name="input_name"></a> [name](#input\_name) | name to prepend to all resource names within module | `string` | `"onprem-git-downloader-module"` | no |
+| <a name="input_s3_bucket_arn"></a> [s3\_bucket\_arn](#input\_s3\_bucket\_arn) | S3 bucket where code artifacts will be stored. Used for IAM policy documents. | `string` | n/a | yes |
+| <a name="input_s3_bucket_name"></a> [s3\_bucket\_name](#input\_s3\_bucket\_name) | S3 bucket where code artifacts will be stored. Used for Lambda env vars. | `string` | n/a | yes |
+
+## Outputs
+
+No outputs.
+
+---
+
+<span style="color:red">Note:</span> Manual changes to the README will be overwritten when the documentation is updated. To update the documentation, run `terraform-docs -c .config/.terraform-docs.yml .`
+<!-- END_TF_DOCS -->

@@ -1,6 +1,7 @@
 # Lambda which is triggered by API GW. Reaches out to Bitbucket server, requests ZIP archive of repository, and pushes that archive to S3.
 
 # Data object to provide lambda archive for upload to AWS
+#tflint-ignore: terraform_required_providers -- Ignore warning on version constraint
 data "archive_file" "function_code" {
   source_dir  = "${path.module}/lambda"
   output_path = "${path.module}/lambda/lambda.zip"
@@ -8,9 +9,9 @@ data "archive_file" "function_code" {
   excludes    = ["${path.module}/lambda/lambda.zip"]
 }
 
+#tfsec:ignore:aws-lambda-enable-tracing -- Ignores Function Tracing being disabled
 resource "aws_lambda_function" "bitbucket_integration" {
-  function_name = "${var.name}-bitbucket-integration"
-  //  function_name = "CodePipeline-Bitbucket-Integration"
+  function_name    = "${var.name}-bitbucket-integration"
   handler          = "index.handler"
   layers           = []
   role             = aws_iam_role.bitbucket_integration_role.arn
@@ -20,13 +21,11 @@ resource "aws_lambda_function" "bitbucket_integration" {
   source_code_hash = filebase64sha256(data.archive_file.function_code.output_path)
   environment {
     variables = {
-//      "BITBUCKET_SECRET"     = var.lambda_bitbucket_secret
       "BITBUCKET_SECRET_NAME" = aws_secretsmanager_secret.bitbucket_pat_and_signing_key.id
-      "BITBUCKET_SERVER_URL" = var.lambda_bitbucket_server_url
-//      "BITBUCKET_TOKEN"      = var.lambda_bitbucket_access_token
-      "S3BUCKET"             = var.s3_bucket_name
-      "WEBPROXY_HOST"        = ""
-      "WEBPROXY_PORT"        = ""
+      "BITBUCKET_SERVER_URL"  = var.lambda_bitbucket_server_url
+      "S3BUCKET"              = var.s3_bucket_name
+      "WEBPROXY_HOST"         = ""
+      "WEBPROXY_PORT"         = ""
     }
   }
   kms_key_arn = aws_kms_key.this.arn
@@ -132,10 +131,10 @@ resource "aws_iam_role_policy_attachment" "s3_bucket_access" {
 
 resource "aws_iam_role_policy_attachment" "secret_access" {
   policy_arn = aws_iam_policy.secret_access.arn
-  role = aws_iam_role.bitbucket_integration_role.name
+  role       = aws_iam_role.bitbucket_integration_role.name
 }
 
-resource "aws_iam_role_policy_attachment" "AWSLambdaVPCAccessExecutionRole" {
+resource "aws_iam_role_policy_attachment" "aws_lambda_vpc_access_execution_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   role       = aws_iam_role.bitbucket_integration_role.name
 }
@@ -149,6 +148,7 @@ resource "aws_lambda_permission" "bitbucket_integration_api_gw" {
 }
 
 # TODO: The account number in the policy below needs to be updated once a PRD account has been defined.
+#tfsec:ignore:aws-kms-auto-rotate-keys --Ignores warning on Key Rotation not enabled
 resource "aws_kms_key" "this" {
   description = "CMK used by the Lambda Function to encrypt the environment variables."
   policy      = <<EOF
@@ -176,9 +176,11 @@ resource "aws_kms_alias" "this" {
   name          = "alias/${var.name}-lambda-key"
 }
 
+
 resource "aws_security_group" "lambda_function_sg" {
   name        = "${var.name}-bitbucket-integration-lambda-sg"
   description = "Security group to allow outbound traffic from the lambda function."
+  #tfsec:ignore:aws-ec2-no-public-egress-sgr -- Ignore warning on egress to multiple public internet addresses
   egress {
     cidr_blocks = [
       "0.0.0.0/0"
