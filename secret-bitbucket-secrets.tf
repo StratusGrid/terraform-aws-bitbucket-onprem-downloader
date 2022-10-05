@@ -24,9 +24,3 @@ resource "aws_secretsmanager_secret_version" "bitbucket_pat_and_signing_key" {
   secret_id     = aws_secretsmanager_secret.bitbucket_pat_and_signing_key.id
   secret_string = local.bitbucket_secrets
 }
-
-# tflint-ignore: all
-data "aws_secretsmanager_secret_version" "bitbucket_pat_and_signing_key" {
-  depends_on = [aws_secretsmanager_secret_version.bitbucket_pat_and_signing_key]
-  secret_id  = aws_secretsmanager_secret.bitbucket_pat_and_signing_key.id
-}
