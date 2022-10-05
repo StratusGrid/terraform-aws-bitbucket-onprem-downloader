@@ -55,20 +55,6 @@ variable "lambda_vpc_id" {
   type        = string
 }
 
-#tflint-ignore: terraform_unused_declarations
-variable "lambda_webproxy_host" {
-  description = "Hostname of your proxy server used by the Lambda function to access the Bitbucket server, such as myproxy.mydomain.com. If you don’t need a web proxy, leave it blank."
-  type        = string
-  default     = ""
-}
-
-#tflint-ignore: terraform_unused_declarations
-variable "lambda_webproxy_port" {
-  description = "Port of your proxy server used by the Lambda function to access the Bitbucket server, such as 8080. If you don’t need a web proxy leave it blank."
-  type        = string
-  default     = ""
-}
-
 variable "name" {
   type        = string
   default     = "onprem-git-downloader-module"

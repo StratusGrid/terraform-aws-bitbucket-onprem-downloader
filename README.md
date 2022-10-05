@@ -75,8 +75,6 @@ module "onprem_bitbucket_git_downloader" {
 | <a name="input_lambda_bitbucket_server_url"></a> [lambda\_bitbucket\_server\_url](#input\_lambda\_bitbucket\_server\_url) | URL for the 3rd party Bitbucket server. | `string` | n/a | yes |
 | <a name="input_lambda_subnet_ids"></a> [lambda\_subnet\_ids](#input\_lambda\_subnet\_ids) | List of subnets where the lambda will operate. | `list(string)` | n/a | yes |
 | <a name="input_lambda_vpc_id"></a> [lambda\_vpc\_id](#input\_lambda\_vpc\_id) | VPC to use when creating the SG for the Lambda | `string` | n/a | yes |
-| <a name="input_lambda_webproxy_host"></a> [lambda\_webproxy\_host](#input\_lambda\_webproxy\_host) | Hostname of your proxy server used by the Lambda function to access the Bitbucket server, such as myproxy.mydomain.com. If you don’t need a web proxy, leave it blank. | `string` | `""` | no |
-| <a name="input_lambda_webproxy_port"></a> [lambda\_webproxy\_port](#input\_lambda\_webproxy\_port) | Port of your proxy server used by the Lambda function to access the Bitbucket server, such as 8080. If you don’t need a web proxy leave it blank. | `string` | `""` | no |
 | <a name="input_name"></a> [name](#input\_name) | name to prepend to all resource names within module | `string` | `"onprem-git-downloader-module"` | no |
 | <a name="input_s3_bucket_arn"></a> [s3\_bucket\_arn](#input\_s3\_bucket\_arn) | S3 bucket where code artifacts will be stored. Used for IAM policy documents. | `string` | n/a | yes |
 | <a name="input_s3_bucket_name"></a> [s3\_bucket\_name](#input\_s3\_bucket\_name) | S3 bucket where code artifacts will be stored. Used for Lambda env vars. | `string` | n/a | yes |
