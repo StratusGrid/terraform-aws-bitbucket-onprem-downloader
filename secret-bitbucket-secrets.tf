@@ -1,10 +1,15 @@
 # This secret will store sensitive values which must be retrieved by the downloader lambda.
 # Specifically, the bitbucket access token and signing secret.
+resource "aws_kms_key" "bitbucket_pat_and_signing_key" {
+  description             = "KMS key used to encrypt bitbucket token and secret"
+  enable_key_rotation     = true
+  deletion_window_in_days = var.kms_log_key_deletion_window
+}
 
-#tfsec:ignore:aws-ssm-secret-use-customer-key -- Ignores warning on usage of AWS managed key instead of a specific/custom one.
 resource "aws_secretsmanager_secret" "bitbucket_pat_and_signing_key" {
   name        = "${var.name}-bitbucket-secret"
   description = "Personal Access Token and Webhook Signing Key for Bitbucket."
+  kms_key_id  = aws_kms_key.bitbucket_pat_and_signing_key.arn
 
   tags = merge(var.input_tags,
     {

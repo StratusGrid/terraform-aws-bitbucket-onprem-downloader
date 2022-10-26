@@ -54,6 +54,8 @@ module "onprem_bitbucket_git_downloader" {
 | [aws_iam_role_policy_attachment.s3_bucket_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.secret_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_kms_alias.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
+| [aws_kms_key.api_gw_log_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
+| [aws_kms_key.bitbucket_pat_and_signing_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 | [aws_kms_key.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 | [aws_lambda_function.bitbucket_integration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
 | [aws_lambda_permission.bitbucket_integration_api_gw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
@@ -70,10 +72,12 @@ module "onprem_bitbucket_git_downloader" {
 | <a name="input_apigw_stage_name"></a> [apigw\_stage\_name](#input\_apigw\_stage\_name) | Stage name for API GW | `string` | `"prod"` | no |
 | <a name="input_current_account"></a> [current\_account](#input\_current\_account) | The AWS account number of the caller. | `string` | n/a | yes |
 | <a name="input_input_tags"></a> [input\_tags](#input\_input\_tags) | Map of tags to apply to resources | `map(string)` | <pre>{<br>  "Developer": "StratusGrid",<br>  "Provisioner": "Terraform"<br>}</pre> | no |
+| <a name="input_kms_log_key_deletion_window"></a> [kms\_log\_key\_deletion\_window](#input\_kms\_log\_key\_deletion\_window) | Duration (in day) of kms key created, default is 30 | `number` | n/a | yes |
 | <a name="input_lambda_bitbucket_access_token"></a> [lambda\_bitbucket\_access\_token](#input\_lambda\_bitbucket\_access\_token) | Personal Access Token used to authenticate to the Bitbucket server. | `string` | n/a | yes |
 | <a name="input_lambda_bitbucket_secret"></a> [lambda\_bitbucket\_secret](#input\_lambda\_bitbucket\_secret) | The Bitbucket secret used to sign webhooks. | `string` | n/a | yes |
 | <a name="input_lambda_bitbucket_server_url"></a> [lambda\_bitbucket\_server\_url](#input\_lambda\_bitbucket\_server\_url) | URL for the 3rd party Bitbucket server. | `string` | n/a | yes |
 | <a name="input_lambda_subnet_ids"></a> [lambda\_subnet\_ids](#input\_lambda\_subnet\_ids) | List of subnets where the lambda will operate. | `list(string)` | n/a | yes |
+| <a name="input_lambda_tracing_option"></a> [lambda\_tracing\_option](#input\_lambda\_tracing\_option) | Lambda Tracing option whether to sample and trace a subset of incoming requests with AWS X-Ray. | `string` | `"Active"` | no |
 | <a name="input_lambda_vpc_id"></a> [lambda\_vpc\_id](#input\_lambda\_vpc\_id) | VPC to use when creating the SG for the Lambda | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | name to prepend to all resource names within module | `string` | `"onprem-git-downloader-module"` | no |
 | <a name="input_s3_bucket_arn"></a> [s3\_bucket\_arn](#input\_s3\_bucket\_arn) | S3 bucket where code artifacts will be stored. Used for IAM policy documents. | `string` | n/a | yes |

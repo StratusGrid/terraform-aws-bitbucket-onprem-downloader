@@ -70,3 +70,14 @@ variable "s3_bucket_name" {
   description = "S3 bucket where code artifacts will be stored. Used for Lambda env vars."
   type        = string
 }
+
+variable "lambda_tracing_option" {
+  description = "Lambda Tracing option whether to sample and trace a subset of incoming requests with AWS X-Ray."
+  type        = string
+  default     = "Active"
+}
+
+variable "kms_log_key_deletion_window" {
+  description = "Duration (in day) of kms key created, default is 30"
+  type        = number
+}

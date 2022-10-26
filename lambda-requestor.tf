@@ -1,7 +1,6 @@
 # Lambda which is triggered by API GW. Reaches out to Bitbucket server, requests ZIP archive of repository, and pushes that archive to S3.
 
 # Data object to provide lambda archive for upload to AWS
-#tflint-ignore: terraform_required_providers -- Ignore warning on version constraint
 data "archive_file" "function_code" {
   source_dir  = "${path.module}/lambda"
   output_path = "${path.module}/lambda/lambda.zip"
@@ -9,7 +8,6 @@ data "archive_file" "function_code" {
   excludes    = ["${path.module}/lambda/lambda.zip"]
 }
 
-#tfsec:ignore:aws-lambda-enable-tracing -- Ignores Function Tracing being disabled
 resource "aws_lambda_function" "bitbucket_integration" {
   function_name    = "${var.name}-bitbucket-integration"
   handler          = "index.handler"
@@ -19,6 +17,7 @@ resource "aws_lambda_function" "bitbucket_integration" {
   timeout          = 30
   filename         = data.archive_file.function_code.output_path
   source_code_hash = filebase64sha256(data.archive_file.function_code.output_path)
+
   environment {
     variables = {
       "BITBUCKET_SECRET_NAME" = aws_secretsmanager_secret.bitbucket_pat_and_signing_key.id
@@ -30,15 +29,18 @@ resource "aws_lambda_function" "bitbucket_integration" {
   }
   kms_key_arn = aws_kms_key.this.arn
   timeouts {}
+
   tracing_config {
-    mode = "PassThrough"
+    mode = var.lambda_tracing_option
   }
+
   vpc_config {
     security_group_ids = [
       aws_security_group.lambda_function_sg.id
     ]
     subnet_ids = var.lambda_subnet_ids
   }
+
   tags = merge(var.input_tags, {
     "Name" = "${var.name}-bitbucket-integration"
   })
@@ -148,10 +150,12 @@ resource "aws_lambda_permission" "bitbucket_integration_api_gw" {
 }
 
 # TODO: The account number in the policy below needs to be updated once a PRD account has been defined.
-#tfsec:ignore:aws-kms-auto-rotate-keys --Ignores warning on Key Rotation not enabled
 resource "aws_kms_key" "this" {
-  description = "CMK used by the Lambda Function to encrypt the environment variables."
-  policy      = <<EOF
+  description             = "CMK used by the Lambda Function to encrypt the environment variables."
+  enable_key_rotation     = true
+  deletion_window_in_days = var.kms_log_key_deletion_window
+
+  policy = <<EOF
 {
     "Version": "2012-10-17",
     "Id": "root",
@@ -168,14 +172,13 @@ resource "aws_kms_key" "this" {
     ]
 }
 EOF
-  tags        = var.input_tags
+  tags   = var.input_tags
 }
 
 resource "aws_kms_alias" "this" {
   target_key_id = aws_kms_key.this.id
   name          = "alias/${var.name}-lambda-key"
 }
-
 
 resource "aws_security_group" "lambda_function_sg" {
   name        = "${var.name}-bitbucket-integration-lambda-sg"
