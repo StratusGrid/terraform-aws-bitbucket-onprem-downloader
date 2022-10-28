@@ -1,24 +1,24 @@
 variable "apigw_logging_level" {
   description = "Can be OFF, INFO, or ERROR."
-  type = string
-  default = "OFF"
+  type        = string
+  default     = "OFF"
 }
 
 variable "apigw_metrics_enabled" {
   description = "Enable metrics for the prod stage of the API GW."
-  type = bool
-  default = false
+  type        = bool
+  default     = false
 }
 
 variable "apigw_stage_name" {
   description = "Stage name for API GW"
-  type = string
-  default = "prod"
+  type        = string
+  default     = "prod"
 }
 
 variable "current_account" {
   description = "The AWS account number of the caller."
-  type = string
+  type        = string
 }
 
 variable "input_tags" {
@@ -32,39 +32,27 @@ variable "input_tags" {
 
 variable "lambda_bitbucket_access_token" {
   description = "Personal Access Token used to authenticate to the Bitbucket server."
-  type = string
+  type        = string
 }
 
 variable "lambda_bitbucket_secret" {
   description = "The Bitbucket secret used to sign webhooks."
-  type = string
+  type        = string
 }
 
 variable "lambda_bitbucket_server_url" {
   description = "URL for the 3rd party Bitbucket server."
-  type = string
+  type        = string
 }
 
 variable "lambda_subnet_ids" {
   description = "List of subnets where the lambda will operate."
-  type = list(string)
+  type        = list(string)
 }
 
 variable "lambda_vpc_id" {
   description = "VPC to use when creating the SG for the Lambda"
-  type = string
-}
-
-variable "lambda_webproxy_host" {
-  description = "Hostname of your proxy server used by the Lambda function to access the Bitbucket server, such as myproxy.mydomain.com. If you don’t need a web proxy, leave it blank."
-  type = string
-  default = ""
-}
-
-variable "lambda_webproxy_port" {
-  description = "Port of your proxy server used by the Lambda function to access the Bitbucket server, such as 8080. If you don’t need a web proxy leave it blank."
-  type = string
-  default = ""
+  type        = string
 }
 
 variable "name" {
@@ -75,10 +63,21 @@ variable "name" {
 
 variable "s3_bucket_arn" {
   description = "S3 bucket where code artifacts will be stored. Used for IAM policy documents."
-  type = string
+  type        = string
 }
 
 variable "s3_bucket_name" {
   description = "S3 bucket where code artifacts will be stored. Used for Lambda env vars."
-  type = string
+  type        = string
+}
+
+variable "lambda_tracing_option" {
+  description = "Lambda Tracing option whether to sample and trace a subset of incoming requests with AWS X-Ray."
+  type        = string
+  default     = "Active"
+}
+
+variable "kms_log_key_deletion_window" {
+  description = "Duration (in day) of kms key created, default is 30"
+  type        = number
 }

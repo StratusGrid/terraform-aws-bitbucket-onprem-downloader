@@ -1,0 +1,15 @@
+module "onprem_bitbucket_git_downloader" {
+  source                        = "../.."
+  name                          = "${var.name_prefix}-bitbucket-git-downloader"
+  apigw_logging_level           = "ERROR"
+  apigw_metrics_enabled         = true
+  apigw_stage_name              = "prod"
+  current_account               = data.aws_caller_identity.current.account_id
+  lambda_bitbucket_access_token = data.aws_secretsmanager_secret_version.bitbucket_token.secret_string
+  lambda_bitbucket_secret       = data.aws_secretsmanager_secret_version.bitbucket_secret.secret_string
+  lambda_bitbucket_server_url   = "https://bitbucket.onpremisedomain.net"
+  lambda_subnet_ids             = data.aws_subnet_ids.private_subnets.ids
+  lambda_vpc_id                 = data.aws_vpc.my_vpc.id
+  s3_bucket_arn                 = aws_s3_bucket.s3_bucket.arn
+  s3_bucket_name                = aws_s3_bucket.s3_bucket.bucket
+}

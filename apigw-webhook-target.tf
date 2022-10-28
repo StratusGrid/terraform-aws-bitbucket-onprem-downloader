@@ -35,7 +35,7 @@ resource "aws_api_gateway_resource" "this" {
 }
 
 resource "aws_api_gateway_method" "this" {
-  authorization = "NONE"
+  authorization = "AWS_IAM"
   http_method   = "POST"
   resource_id   = aws_api_gateway_resource.this.id
   rest_api_id   = aws_api_gateway_rest_api.this.id
@@ -72,16 +72,33 @@ resource "aws_api_gateway_stage" "this" {
   deployment_id         = aws_api_gateway_deployment.this.id
   rest_api_id           = aws_api_gateway_rest_api.this.id
   stage_name            = var.apigw_stage_name
-  xray_tracing_enabled  = false
-  tags = merge(var.input_tags, {
-    "Name" = var.apigw_stage_name
+  xray_tracing_enabled  = true
+
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gw.arn
+    format          = "json"
+  }
+
+  tags = merge(var.input_tags,
+    {
+      "Name" = var.apigw_stage_name
   })
+}
+
+resource "aws_kms_key" "api_gw_log_key" {
+  description             = "KMS key for encryption of API's cloudwatch logs."
+  enable_key_rotation     = true
+  deletion_window_in_days = var.kms_log_key_deletion_window
 }
 
 resource "aws_cloudwatch_log_group" "api_gw" {
   name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.this.id}/${var.apigw_stage_name}"
   retention_in_days = 7
-  tags = merge(var.input_tags, {
-    "Name" = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.this.id}/${var.apigw_stage_name}"
+
+  kms_key_id = aws_kms_key.api_gw_log_key.arn
+
+  tags = merge(var.input_tags,
+    {
+      "Name" = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.this.id}/${var.apigw_stage_name}"
   })
 }

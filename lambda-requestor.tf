@@ -9,8 +9,7 @@ data "archive_file" "function_code" {
 }
 
 resource "aws_lambda_function" "bitbucket_integration" {
-  function_name = "${var.name}-bitbucket-integration"
-  //  function_name = "CodePipeline-Bitbucket-Integration"
+  function_name    = "${var.name}-bitbucket-integration"
   handler          = "index.handler"
   layers           = []
   role             = aws_iam_role.bitbucket_integration_role.arn
@@ -18,28 +17,30 @@ resource "aws_lambda_function" "bitbucket_integration" {
   timeout          = 30
   filename         = data.archive_file.function_code.output_path
   source_code_hash = filebase64sha256(data.archive_file.function_code.output_path)
+
   environment {
     variables = {
-//      "BITBUCKET_SECRET"     = var.lambda_bitbucket_secret
       "BITBUCKET_SECRET_NAME" = aws_secretsmanager_secret.bitbucket_pat_and_signing_key.id
-      "BITBUCKET_SERVER_URL" = var.lambda_bitbucket_server_url
-//      "BITBUCKET_TOKEN"      = var.lambda_bitbucket_access_token
-      "S3BUCKET"             = var.s3_bucket_name
-      "WEBPROXY_HOST"        = ""
-      "WEBPROXY_PORT"        = ""
+      "BITBUCKET_SERVER_URL"  = var.lambda_bitbucket_server_url
+      "S3BUCKET"              = var.s3_bucket_name
+      "WEBPROXY_HOST"         = ""
+      "WEBPROXY_PORT"         = ""
     }
   }
   kms_key_arn = aws_kms_key.this.arn
   timeouts {}
+
   tracing_config {
-    mode = "PassThrough"
+    mode = var.lambda_tracing_option
   }
+
   vpc_config {
     security_group_ids = [
       aws_security_group.lambda_function_sg.id
     ]
     subnet_ids = var.lambda_subnet_ids
   }
+
   tags = merge(var.input_tags, {
     "Name" = "${var.name}-bitbucket-integration"
   })
@@ -132,10 +133,10 @@ resource "aws_iam_role_policy_attachment" "s3_bucket_access" {
 
 resource "aws_iam_role_policy_attachment" "secret_access" {
   policy_arn = aws_iam_policy.secret_access.arn
-  role = aws_iam_role.bitbucket_integration_role.name
+  role       = aws_iam_role.bitbucket_integration_role.name
 }
 
-resource "aws_iam_role_policy_attachment" "AWSLambdaVPCAccessExecutionRole" {
+resource "aws_iam_role_policy_attachment" "aws_lambda_vpc_access_execution_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   role       = aws_iam_role.bitbucket_integration_role.name
 }
@@ -150,8 +151,11 @@ resource "aws_lambda_permission" "bitbucket_integration_api_gw" {
 
 # TODO: The account number in the policy below needs to be updated once a PRD account has been defined.
 resource "aws_kms_key" "this" {
-  description = "CMK used by the Lambda Function to encrypt the environment variables."
-  policy      = <<EOF
+  description             = "CMK used by the Lambda Function to encrypt the environment variables."
+  enable_key_rotation     = true
+  deletion_window_in_days = var.kms_log_key_deletion_window
+
+  policy = <<EOF
 {
     "Version": "2012-10-17",
     "Id": "root",
@@ -168,7 +172,7 @@ resource "aws_kms_key" "this" {
     ]
 }
 EOF
-  tags        = var.input_tags
+  tags   = var.input_tags
 }
 
 resource "aws_kms_alias" "this" {
@@ -179,6 +183,7 @@ resource "aws_kms_alias" "this" {
 resource "aws_security_group" "lambda_function_sg" {
   name        = "${var.name}-bitbucket-integration-lambda-sg"
   description = "Security group to allow outbound traffic from the lambda function."
+  #tfsec:ignore:aws-ec2-no-public-egress-sgr -- Ignore warning on egress to multiple public internet addresses
   egress {
     cidr_blocks = [
       "0.0.0.0/0"
