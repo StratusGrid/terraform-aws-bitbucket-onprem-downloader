@@ -1,23 +1,34 @@
 <!-- BEGIN_TF_DOCS -->
-# terraform-aws-bitbucket-onprem-downloader
+<p align="center">                                                                                                                                            
+                                                                                
+  <img src="https://github.com/StratusGrid/terraform-readme-template/blob/main/header/stratusgrid-logo-smaller.jpg?raw=true" />
+  <p align="center">                                                           
+    <a href="https://stratusgrid.com/book-a-consultation">Contact Us</a> |                  
+    <a href="https://stratusgrid.com/cloud-cost-optimization-dashboard">Stratusphere FinOps</a> |
+    <a href="https://stratusgrid.com">StratusGrid Home</a> |
+    <a href="https://stratusgrid.com/blog">Blog</a>
+  </p>                    
+</p>
 
-GitHub: [StratusGrid/terraform-aws-bitbucket-onprem-downloader](https://github.com/StratusGrid/terraform-aws-bitbucket-onprem-downloader)
+ # terraform-aws-bitbucket-onprem-downloader
 
-This module creates an API Gateway, Lambda, and supporting resources.
-The API GW accepts an incoming webhook from a 3rd-party (on premise) Bitbucket server and triggers the Lambda which requests a ZIP archive of the repository which triggered the webhook, and uploads that ZIP to a provided S3 bucket.
+ GitHub: [StratusGrid/terraform-aws-bitbucket-onprem-downloader](https://github.com/StratusGrid/terraform-aws-bitbucket-onprem-downloader)
 
-<span style="color:red">NOTE:</span> The resulting archive will be named after the branch being retrieved, and any forward slashes will be replaced with hyphens.
-
-### Pre-deployment Checklist:
-Navigate into the "lambda" directory and build the requisite modules:
-```shell
-cd lambda
-npm install
-```
-
-## Example usage of the module:
-```hcl
-module "onprem_bitbucket_git_downloader" {
+ This module creates an API Gateway, Lambda, and supporting resources.
+ The API GW accepts an incoming webhook from a 3rd-party (on premise) Bitbucket server and triggers the Lambda which requests a ZIP archive of the repository which triggered the webhook, and uploads that ZIP to a provided S3 bucket.
+ 
+ <span style="color:red">NOTE:</span> The resulting archive will be named after the branch being retrieved, and any forward slashes will be replaced with hyphens.
+ 
+ ### Pre-deployment Checklist:
+ Navigate into the "lambda" directory and build the requisite modules:
+ ```shell
+ cd lambda
+ npm install
+ ```
+ 
+ ## Example usage of the module:
+ ```hcl
+ module "onprem_bitbucket_git_downloader" {
   source                        = "../.."
   name                          = "${var.name_prefix}-bitbucket-git-downloader"
   apigw_logging_level           = "ERROR"
@@ -32,10 +43,10 @@ module "onprem_bitbucket_git_downloader" {
   s3_bucket_arn                 = aws_s3_bucket.s3_bucket.arn
   s3_bucket_name                = aws_s3_bucket.s3_bucket.bucket
 }
-```
----
+ ```
+ ---
 
-## Resources
+ ## Resources
 
 | Name | Type |
 |------|------|
@@ -63,7 +74,7 @@ module "onprem_bitbucket_git_downloader" {
 | [aws_secretsmanager_secret_version.bitbucket_pat_and_signing_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
 | [aws_security_group.lambda_function_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 
-## Inputs
+ ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
@@ -83,11 +94,11 @@ module "onprem_bitbucket_git_downloader" {
 | <a name="input_s3_bucket_arn"></a> [s3\_bucket\_arn](#input\_s3\_bucket\_arn) | S3 bucket where code artifacts will be stored. Used for IAM policy documents. | `string` | n/a | yes |
 | <a name="input_s3_bucket_name"></a> [s3\_bucket\_name](#input\_s3\_bucket\_name) | S3 bucket where code artifacts will be stored. Used for Lambda env vars. | `string` | n/a | yes |
 
-## Outputs
+ ## Outputs
 
 No outputs.
 
----
+ ---
 
-<span style="color:red">Note:</span> Manual changes to the README will be overwritten when the documentation is updated. To update the documentation, run `terraform-docs -c .config/.terraform-docs.yml .`
+ <span style="color:red">Note:</span> Manual changes to the README will be overwritten when the documentation is updated. To update the documentation, run `terraform-docs -c .config/.terraform-docs.yml .`
 <!-- END_TF_DOCS -->
